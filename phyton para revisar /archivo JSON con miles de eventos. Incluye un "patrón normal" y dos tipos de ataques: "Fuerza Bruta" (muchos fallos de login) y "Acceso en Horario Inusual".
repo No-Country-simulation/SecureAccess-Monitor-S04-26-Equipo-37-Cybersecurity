@@ -1,0 +1,50 @@
+import pandas as pd
+import numpy as np
+from faker import Faker
+import json
+import random
+from datetime import datetime, timedelta
+
+fake = Faker()
+
+def generate_cloud_logs(n_events=1000):
+    logs = []
+    start_time = datetime.now() - timedelta(days=1)
+    
+    # Usuarios y recursos simulados
+    users = ["admin_root", "dev_user", "intern_01", "marketing_mgr"]
+    resources = ["S3_Bucket_Finance", "EC2_Production_Server", "Auth_Service"]
+
+    for i in range(n_events):
+        # 1. Generar actividad NORMAL
+        timestamp = start_time + timedelta(seconds=i * random.randint(30, 120))
+        event = {
+            "timestamp": timestamp.isoformat(),
+            "user": random.choice(users),
+            "ip": fake.ipv4(),
+            "resource": random.choice(resources),
+            "action": random.choice(["LOGIN", "GET_DATA", "PUT_DATA"]),
+            "status": "SUCCESS" if random.random() > 0.1 else "FAILED",
+            "risk_score": 0
+        }
+        logs.append(event)
+
+    # 2. Inyectar ANOMALÍA: Ataque de Fuerza Bruta (Brute Force)
+    attacker_ip = "192.168.50.200"
+    for _ in range(15):
+        logs.append({
+            "timestamp": (start_time + timedelta(hours=2)).isoformat(),
+            "user": "admin_root",
+            "ip": attacker_ip,
+            "resource": "Auth_Service",
+            "action": "LOGIN",
+            "status": "FAILED",
+            "risk_score": 0
+        })
+
+    # Guardar a archivo
+    with open('cloud_activity.json', 'w') as f:
+        json.dump(logs, f, indent=4)
+    print(f"Dataset generado con {len(logs)} eventos.")
+
+generate_cloud_logs()
