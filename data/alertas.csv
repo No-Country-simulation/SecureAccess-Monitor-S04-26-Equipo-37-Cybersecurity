@@ -1,0 +1,31 @@
+tipo_alerta,user_id,detalle,primer_evento,ultimo_evento,pais,resource,risk_score_max,total_eventos
+FUERZA_BRUTA,user_019,13 intentos fallidos en 117 segundos,2024-02-02 00:00:00,2024-02-02 00:01:57,Rusia,billing,100,13
+FUERZA_BRUTA,user_020,13 intentos fallidos en 117 segundos,2024-02-16 00:00:00,2024-02-16 00:01:57,Iran,billing,100,13
+FUERZA_BRUTA,user_021,17 intentos fallidos en 114 segundos,2024-02-15 00:00:00,2024-02-15 00:01:54,China,billing,100,17
+FUERZA_BRUTA,user_022,13 intentos fallidos en 112 segundos,2024-03-16 00:00:00,2024-03-16 00:01:52,Rusia,database,100,13
+FUERZA_BRUTA,user_022,12 intentos fallidos en 103 segundos,2024-03-16 00:02:01,2024-03-16 00:03:44,Rusia,billing,100,12
+FUERZA_BRUTA,user_023,15 intentos fallidos en 104 segundos,2024-02-03 00:00:00,2024-02-03 00:01:44,China,database,100,15
+PAIS_SOSPECHOSO,user_019,"Acceso a recursos sensibles desde Rusia (17 eventos, recursos: billing, database, admin_panel)",2024-02-02 00:00:00,2024-02-02 00:04:00,Rusia,billing,100,17
+PAIS_SOSPECHOSO,user_020,"Acceso a recursos sensibles desde Iran (15 eventos, recursos: billing, database, admin_panel)",2024-02-16 00:00:00,2024-02-16 00:02:24,Iran,billing,100,15
+PAIS_SOSPECHOSO,user_021,"Acceso a recursos sensibles desde China (23 eventos, recursos: billing, admin_panel, database)",2024-02-15 00:00:00,2024-02-15 00:04:54,China,billing,100,23
+PAIS_SOSPECHOSO,user_022,"Acceso a recursos sensibles desde Rusia (28 eventos, recursos: database, admin_panel, billing)",2024-03-16 00:00:00,2024-03-16 00:05:12,Rusia,database,100,28
+PAIS_SOSPECHOSO,user_023,"Acceso a recursos sensibles desde China (28 eventos, recursos: database, billing, admin_panel)",2024-02-03 00:00:00,2024-02-03 00:05:25,China,database,100,28
+PAIS_SOSPECHOSO,user_024,"Acceso a recursos sensibles desde China (6 eventos, recursos: billing, database, admin_panel)",2024-05-01 00:00:00,2024-05-01 00:25:00,China,billing,70,6
+PAIS_SOSPECHOSO,user_025,"Acceso a recursos sensibles desde China (5 eventos, recursos: database, admin_panel, billing)",2024-04-25 00:00:00,2024-04-25 00:20:00,China,database,90,5
+PAIS_SOSPECHOSO,user_026,"Acceso a recursos sensibles desde Nigeria (6 eventos, recursos: billing, database)",2024-03-28 00:00:00,2024-03-28 00:25:00,Nigeria,billing,90,6
+PAIS_SOSPECHOSO,user_027,"Acceso a recursos sensibles desde Iran (7 eventos, recursos: billing, database, admin_panel)",2024-03-16 00:00:00,2024-03-16 00:30:00,Iran,billing,70,7
+HORARIO_INUSUAL,user_019,Acceso a recursos sensibles en madrugada (17 eventos entre las 00:00 y 00:59),2024-02-02 00:00:00,2024-02-02 00:04:00,Rusia,billing,100,17
+HORARIO_INUSUAL,user_020,Acceso a recursos sensibles en madrugada (15 eventos entre las 00:00 y 00:59),2024-02-16 00:00:00,2024-02-16 00:02:24,Iran,billing,100,15
+HORARIO_INUSUAL,user_021,Acceso a recursos sensibles en madrugada (23 eventos entre las 00:00 y 00:59),2024-02-15 00:00:00,2024-02-15 00:04:54,China,billing,100,23
+HORARIO_INUSUAL,user_022,Acceso a recursos sensibles en madrugada (28 eventos entre las 00:00 y 00:59),2024-03-16 00:00:00,2024-03-16 00:05:12,Rusia,database,100,28
+HORARIO_INUSUAL,user_023,Acceso a recursos sensibles en madrugada (28 eventos entre las 00:00 y 00:59),2024-02-03 00:00:00,2024-02-03 00:05:25,China,database,100,28
+HORARIO_INUSUAL,user_024,Acceso a recursos sensibles en madrugada (6 eventos entre las 00:00 y 00:59),2024-05-01 00:00:00,2024-05-01 00:25:00,China,billing,70,6
+HORARIO_INUSUAL,user_025,Acceso a recursos sensibles en madrugada (5 eventos entre las 00:00 y 00:59),2024-04-25 00:00:00,2024-04-25 00:20:00,China,database,90,5
+HORARIO_INUSUAL,user_026,Acceso a recursos sensibles en madrugada (6 eventos entre las 00:00 y 00:59),2024-03-28 00:00:00,2024-03-28 00:25:00,Nigeria,billing,90,6
+HORARIO_INUSUAL,user_027,Acceso a recursos sensibles en madrugada (7 eventos entre las 00:00 y 00:59),2024-03-16 00:00:00,2024-03-16 00:30:00,Iran,billing,70,7
+HORARIO_INUSUAL,user_028,Acceso a recursos sensibles en madrugada (8 eventos entre las 00:00 y 04:59),2024-02-05 01:30:52,2024-06-21 02:48:20,Mexico,admin_panel,40,8
+HORARIO_INUSUAL,user_029,Acceso a recursos sensibles en madrugada (7 eventos entre las 01:00 y 04:59),2024-01-08 04:02:59,2024-05-17 01:22:06,Argentina,billing,40,7
+HORARIO_INUSUAL,user_030,Acceso a recursos sensibles en madrugada (7 eventos entre las 01:00 y 03:59),2024-01-11 01:56:24,2024-05-30 02:59:28,Colombia,database,40,7
+CUENTA_COMPROMETIDA,user_024,"Acceso a recursos nunca utilizados: admin_panel, billing, database (6 eventos en segunda mitad del período)",2024-05-01 00:00:00,2024-05-01 00:25:00,China,billing,70,6
+CUENTA_COMPROMETIDA,user_025,"Acceso a recursos nunca utilizados: admin_panel, billing, database (5 eventos en segunda mitad del período)",2024-04-25 00:00:00,2024-04-25 00:20:00,China,database,90,5
+CUENTA_COMPROMETIDA,user_027,"Acceso a recursos nunca utilizados: admin_panel, billing, database (7 eventos en segunda mitad del período)",2024-03-16 00:00:00,2024-03-16 00:30:00,Iran,billing,70,7
