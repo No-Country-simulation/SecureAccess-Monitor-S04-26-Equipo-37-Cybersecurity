@@ -26,6 +26,6 @@ HORARIO_INUSUAL,user_027,Acceso a recursos sensibles en madrugada (7 eventos ent
 HORARIO_INUSUAL,user_028,Acceso a recursos sensibles en madrugada (8 eventos entre las 00:00 y 04:59),2024-02-05 01:30:52,2024-06-21 02:48:20,Mexico,admin_panel,40,8
 HORARIO_INUSUAL,user_029,Acceso a recursos sensibles en madrugada (7 eventos entre las 01:00 y 04:59),2024-01-08 04:02:59,2024-05-17 01:22:06,Argentina,billing,40,7
 HORARIO_INUSUAL,user_030,Acceso a recursos sensibles en madrugada (7 eventos entre las 01:00 y 03:59),2024-01-11 01:56:24,2024-05-30 02:59:28,Colombia,database,40,7
-CUENTA_COMPROMETIDA,user_024,"Acceso a recursos nunca utilizados: admin_panel, billing, database (6 eventos en segunda mitad del período)",2024-05-01 00:00:00,2024-05-01 00:25:00,China,billing,70,6
-CUENTA_COMPROMETIDA,user_025,"Acceso a recursos nunca utilizados: admin_panel, billing, database (5 eventos en segunda mitad del período)",2024-04-25 00:00:00,2024-04-25 00:20:00,China,database,90,5
-CUENTA_COMPROMETIDA,user_027,"Acceso a recursos nunca utilizados: admin_panel, billing, database (7 eventos en segunda mitad del período)",2024-03-16 00:00:00,2024-03-16 00:30:00,Iran,billing,70,7
+CUENTA_COMPROMETIDA,user_024,"Acceso a recursos nunca utilizados: admin_panel, database, billing (6 eventos en segunda mitad del período)",2024-05-01 00:00:00,2024-05-01 00:25:00,China,billing,70,6
+CUENTA_COMPROMETIDA,user_025,"Acceso a recursos nunca utilizados: admin_panel, database, billing (5 eventos en segunda mitad del período)",2024-04-25 00:00:00,2024-04-25 00:20:00,China,database,90,5
+CUENTA_COMPROMETIDA,user_027,"Acceso a recursos nunca utilizados: admin_panel, database, billing (7 eventos en segunda mitad del período)",2024-03-16 00:00:00,2024-03-16 00:30:00,Iran,billing,70,7
