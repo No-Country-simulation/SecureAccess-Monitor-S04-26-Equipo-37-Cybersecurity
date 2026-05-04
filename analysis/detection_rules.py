@@ -296,3 +296,29 @@ else:
 print("\n" + "=" * 55)
 print("DETECCIÓN COMPLETADA")
 print("=" * 55)
+
+#Regla 5 probamos script para alerta sobre intentos fallidos cada 20 minutos superando el tiempo
+print("\n" + "=" * 55)
+print("REGLA EXTRA — DETECCIÓN DE ATAQUE LENTO (24H)")
+print("=" * 55)
+
+UMBRAL_FALLOS_DIARIOS = 20
+alertas_lentas = 0
+
+# Agrupamos por usuario y por fecha (día)
+fallidos["fecha_dia"] = fallidos["timestamp"].dt.date
+
+for (user_id, fecha), grupo in fallidos.groupby(["user_id", "fecha_dia"]):
+    if len(grupo) > UMBRAL_FALLOS_DIARIOS:
+        detalle = (f"Posible ataque 'Low & Slow': {len(grupo)} intentos fallidos "
+                  f"acumulados el día {fecha}")
+        
+        alerta = registrar_alerta("FUERZA_BRUTA_LENTA", user_id, detalle, grupo)
+        imprimir_alerta(alerta)
+        alertas_lentas += 1
+
+if alertas_lentas == 0:
+    print("\n  Sin ataques lentos detectados.")
+else:
+    print(f"\n  Total alertas ataque lento: {alertas_lentas}")
+     # prueba 1 
