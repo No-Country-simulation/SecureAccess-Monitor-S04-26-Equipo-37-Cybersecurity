@@ -311,8 +311,7 @@ fallidos["fecha_dia"] = fallidos["timestamp"].dt.date
 for (user_id, fecha), grupo in fallidos.groupby(["user_id", "fecha_dia"]):
     if len(grupo) > UMBRAL_FALLOS_DIARIOS:
         detalle = (f"Posible ataque 'Low & Slow': {len(grupo)} intentos fallidos "
-                  f"acumulados el día {fecha}")
-        
+        f"acumulados el día {fecha}")
         alerta = registrar_alerta("FUERZA_BRUTA_LENTA", user_id, detalle, grupo)
         imprimir_alerta(alerta)
         alertas_lentas += 1
@@ -321,4 +320,4 @@ if alertas_lentas == 0:
     print("\n  Sin ataques lentos detectados.")
 else:
     print(f"\n  Total alertas ataque lento: {alertas_lentas}")
-     # prueba 1 
+    # prueba 1  
