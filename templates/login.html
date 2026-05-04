@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>SecureAccess Monitor — Login</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    font-family: 'Courier New', monospace;
+    background: #0a0e1a;
+    color: #e0e6f0;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .login-box {
+    background: #111827;
+    border: 1px solid #1e3a5f;
+    border-radius: 12px;
+    padding: 48px 40px;
+    width: 380px;
+    text-align: center;
+  }
+  .logo { font-size: 32px; margin-bottom: 8px; }
+  h1 { font-size: 16px; color: #60a5fa; letter-spacing: 3px; margin-bottom: 4px; }
+  .sub { font-size: 11px; color: #6b7280; margin-bottom: 32px; }
+  .field { margin-bottom: 16px; text-align: left; }
+  .field label { font-size: 11px; color: #9ca3af; letter-spacing: 1px; display: block; margin-bottom: 6px; }
+  .field input {
+    width: 100%;
+    padding: 10px 14px;
+    background: #0f172a;
+    border: 1px solid #1e3a5f;
+    border-radius: 6px;
+    color: #e0e6f0;
+    font-family: 'Courier New', monospace;
+    font-size: 13px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .field input:focus { border-color: #60a5fa; }
+  .btn {
+    width: 100%;
+    padding: 12px;
+    background: #1d4ed8;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-family: 'Courier New', monospace;
+    font-size: 13px;
+    letter-spacing: 1px;
+    cursor: pointer;
+    margin-top: 8px;
+    transition: background 0.2s;
+  }
+  .btn:hover { background: #2563eb; }
+  .error { color: #f87171; font-size: 12px; margin-top: 12px; display: none; }
+  .hint {
+    margin-top: 24px;
+    padding: 12px;
+    background: #0f172a;
+    border-radius: 6px;
+    font-size: 11px;
+    color: #6b7280;
+    text-align: left;
+  }
+  .hint span { color: #4ade80; }
+</style>
+</head>
+<body>
+<div class="login-box">
+  <div class="logo">🔐</div>
+  <h1>SECUREACCESS MONITOR</h1>
+  <div class="sub">Sistema de Monitoreo de Seguridad</div>
+
+  <div class="field">
+    <label>USUARIO</label>
+    <input type="text" id="username" placeholder="usuario" autocomplete="off">
+  </div>
+  <div class="field">
+    <label>CONTRASEÑA</label>
+    <input type="password" id="password" placeholder="••••••••">
+  </div>
+  <button class="btn" onclick="login()">INICIAR SESIÓN →</button>
+  <div class="error" id="error-msg">❌ Credenciales incorrectas</div>
+
+  <div class="hint">
+    <span>admin</span> / admin123 → acceso total<br>
+    <span>analista</span> / analista123 → solo lectura
+  </div>
+</div>
+
+<script>
+  document.getElementById('password').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') login();
+  });
+
+  async function login() {
+    var username = document.getElementById('username').value;
+    var password = document.getElementById('password').value;
+
+    var formData = new FormData();
+    formData.append('username', username);
+    formData.append('password', password);
+
+    var res = await fetch('/login', {
+      method: 'POST',
+      body: formData
+    });
+
+    if (res.ok) {
+      var data = await res.json();
+      localStorage.setItem('token', data.access_token);
+      localStorage.setItem('rol', data.rol);
+      localStorage.setItem('nombre', data.nombre);
+      window.location.href = '/dashboard';
+    } else {
+      document.getElementById('error-msg').style.display = 'block';
+    }
+  }
+</script>
+</body>
+</html>

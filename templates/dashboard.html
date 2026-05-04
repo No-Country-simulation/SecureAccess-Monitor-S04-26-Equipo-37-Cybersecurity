@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>SecureAccess Monitor — Dashboard</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    font-family: 'Courier New', monospace;
+    background: #0a0e1a;
+    color: #e0e6f0;
+    min-height: 100vh;
+    padding: 20px;
+  }
+  header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 20px;
+    background: #111827;
+    border: 1px solid #1e3a5f;
+    border-radius: 8px;
+    margin-bottom: 16px;
+  }
+  .dot { width:10px; height:10px; background:#22c55e; border-radius:50%; animation: pulse 1.5s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+  header h1 { font-size:16px; color:#60a5fa; letter-spacing:2px; }
+  .user-info { margin-left:auto; font-size:11px; color:#9ca3af; display:flex; align-items:center; gap:12px; }
+  .rol-badge { padding:3px 10px; border-radius:99px; font-size:10px; font-weight:bold; letter-spacing:1px; }
+  .rol-admin    { background:rgba(239,68,68,0.2);  color:#f87171; }
+  .rol-analista { background:rgba(96,165,250,0.2); color:#60a5fa; }
+  .btn-logout {
+    padding:4px 12px;
+    background:transparent;
+    border:1px solid #374151;
+    border-radius:4px;
+    color:#9ca3af;
+    font-family:'Courier New',monospace;
+    font-size:11px;
+    cursor:pointer;
+  }
+  .btn-logout:hover { border-color:#ef4444; color:#ef4444; }
+  .kpis { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:16px; }
+  .kpi { background:#111827; border:1px solid #1e3a5f; border-radius:8px; padding:16px; text-align:center; }
+  .kpi .val { font-size:26px; font-weight:bold; }
+  .kpi .lbl { font-size:10px; color:#6b7280; margin-top:4px; letter-spacing:1px; text-transform:uppercase; }
+  .blue  { color:#60a5fa; }
+  .red   { color:#f87171; }
+  .green { color:#4ade80; }
+  .amber { color:#fbbf24; }
+  .admin-panel {
+    background:rgba(239,68,68,0.05);
+    border:1px solid rgba(239,68,68,0.3);
+    border-radius:8px;
+    padding:12px 16px;
+    margin-bottom:16px;
+    font-size:12px;
+    color:#fca5a5;
+  }
+  .grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+  .panel { background:#111827; border:1px solid #1e3a5f; border-radius:8px; overflow:hidden; }
+  .panel-header {
+    padding:10px 16px;
+    background:#0f172a;
+    border-bottom:1px solid #1e3a5f;
+    font-size:11px;
+    letter-spacing:2px;
+    color:#60a5fa;
+    text-transform:uppercase;
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .panel-body { padding:8px; height:340px; overflow-y:auto; }
+  .panel-body::-webkit-scrollbar { width:4px; }
+  .panel-body::-webkit-scrollbar-thumb { background:#1e3a5f; border-radius:2px; }
+  .evento {
+    display:flex;
+    align-items:center;
+    gap:8px;
+    padding:5px 8px;
+    border-radius:4px;
+    margin-bottom:2px;
+    font-size:11px;
+    animation:fadeIn 0.3s ease;
+  }
+  @keyframes fadeIn { from{opacity:0;transform:translateY(-4px)} to{opacity:1;transform:translateY(0)} }
+  .evento.normal   { color:#4ade80; }
+  .evento.warning  { color:#fbbf24; background:rgba(251,191,36,0.05); }
+  .evento.critical { color:#f87171; background:rgba(248,113,113,0.08); border-left:2px solid #f87171; }
+  .alerta {
+    padding:10px 14px;
+    margin-bottom:6px;
+    border-radius:6px;
+    font-size:12px;
+    border-left:3px solid;
+    animation:fadeIn 0.4s ease;
+  }
+  .alerta.FUERZA_BRUTA        { background:rgba(239,68,68,0.1);  border-color:#ef4444; color:#fca5a5; }
+  .alerta.PAIS_SOSPECHOSO     { background:rgba(249,115,22,0.1); border-color:#f97316; color:#fdba74; }
+  .alerta.HORARIO_INUSUAL     { background:rgba(234,179,8,0.1);  border-color:#eab308; color:#fde047; }
+  .alerta.CUENTA_COMPROMETIDA { background:rgba(168,85,247,0.1); border-color:#a855f7; color:#d8b4fe; }
+  .alerta .tipo { font-weight:bold; font-size:11px; letter-spacing:1px; }
+  .alerta .info { font-size:11px; margin-top:3px; opacity:0.8; }
+  .tag    { font-size:10px; padding:1px 6px; border-radius:99px; background:rgba(96,165,250,0.15); color:#60a5fa; }
+  .ip-tag { font-size:10px; padding:1px 6px; border-radius:99px; background:rgba(234,179,8,0.1);  color:#fde047; }
+  .export-btn {
+    padding:4px 12px;
+    background:rgba(96,165,250,0.1);
+    border:1px solid #1e3a5f;
+    border-radius:4px;
+    color:#60a5fa;
+    font-family:'Courier New',monospace;
+    font-size:10px;
+    cursor:pointer;
+    margin-left:auto;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="dot"></div>
+  <h1>🔐 SECUREACCESS MONITOR</h1>
+  <div class="user-info">
+    <span id="nombre-usuario"></span>
+    <span class="rol-badge" id="rol-badge"></span>
+    <span style="font-size:11px;color:#6b7280;" id="clock"></span>
+    <button class="btn-logout" id="btn-logout">CERRAR SESIÓN</button>
+  </div>
+</header>
+
+<div class="kpis">
+  <div class="kpi"><div class="val green" id="total-eventos">0</div><div class="lbl">Eventos procesados</div></div>
+  <div class="kpi"><div class="val red"   id="total-alertas">0</div><div class="lbl">Alertas generadas</div></div>
+  <div class="kpi"><div class="val amber" id="tasa">0.00%</div><div class="lbl">Tasa de detección</div></div>
+  <div class="kpi"><div class="val blue"  id="usuarios-alertados">0</div><div class="lbl">Usuarios alertados</div></div>
+</div>
+
+<div id="admin-panel" class="admin-panel" style="display:none;">
+  <strong>🛡 PANEL ADMIN</strong> — Acceso completo: IPs sin enmascarar y exportación de alertas.
+</div>
+
+<div class="grid">
+  <div class="panel">
+    <div class="panel-header">
+      🚨 Alertas en vivo
+      <button class="export-btn" id="btn-export" style="display:none" onclick="exportar()">⬇ Exportar CSV</button>
+    </div>
+    <div class="panel-body" id="alertas-panel">
+      <div style="color:#374151;font-size:12px;padding:20px;text-align:center;">Esperando alertas...</div>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="panel-header">📡 Feed de eventos</div>
+    <div class="panel-body" id="eventos-panel"></div>
+  </div>
+</div>
+
+<script>
+  var token  = localStorage.getItem('token');
+  var rol    = localStorage.getItem('rol');
+  var nombre = localStorage.getItem('nombre');
+
+  if (!token) { window.location.href = '/'; }
+
+  document.getElementById('nombre-usuario').textContent = nombre;
+  var rolBadge = document.getElementById('rol-badge');
+  rolBadge.textContent = rol.toUpperCase();
+  rolBadge.className = 'rol-badge rol-' + rol;
+
+  if (rol === 'admin') {
+    document.getElementById('admin-panel').style.display = 'block';
+    document.getElementById('btn-export').style.display  = 'block';
+  }
+
+  setInterval(function() {
+    document.getElementById('clock').textContent = new Date().toLocaleTimeString();
+  }, 1000);
+
+  var usuariosAlertados = new Set();
+  var alertasData = [];
+
+  var ws = new WebSocket('ws://localhost:8001/ws?token=' + token);
+
+  ws.onmessage = function(event) {
+    var data = JSON.parse(event.data);
+
+    document.getElementById('total-eventos').textContent = data.total_eventos;
+    document.getElementById('total-alertas').textContent = data.total_alertas;
+    document.getElementById('tasa').textContent = data.tasa + '%';
+
+    if (data.alertas && data.alertas.length > 0) {
+      var panel = document.getElementById('alertas-panel');
+      if (panel.querySelector('div[style]')) { panel.innerHTML = ''; }
+
+      data.alertas.forEach(function(alerta) {
+        usuariosAlertados.add(data.user_id);
+        document.getElementById('usuarios-alertados').textContent = usuariosAlertados.size;
+        alertasData.push(Object.assign({}, alerta, data));
+
+        var div = document.createElement('div');
+        div.className = 'alerta ' + alerta.tipo;
+        div.innerHTML =
+          '<div class="tipo">⚡ ' + alerta.tipo.replace(/_/g, ' ') + '</div>' +
+          '<div class="info"><strong>' + data.user_id + '</strong> · ' + data.pais + ' · ' + data.timestamp.substring(5, 16) + '</div>' +
+          '<div class="info">' + alerta.detalle + '</div>' +
+          '<div class="info">Risk score: <strong>' + data.score + '</strong>' +
+          (data.ip ? ' <span class="ip-tag">IP: ' + data.ip + '</span>' : '') + '</div>';
+
+        panel.insertBefore(div, panel.firstChild);
+        if (panel.children.length > 50) { panel.removeChild(panel.lastChild); }
+      });
+    }
+
+    var feedPanel = document.getElementById('eventos-panel');
+    var clase = data.alertas.length > 0 ? 'critical' : data.score > 0 ? 'warning' : 'normal';
+    var icono = data.alertas.length > 0 ? '🚨' : data.score > 0 ? '⚠' : '✓';
+
+    var div = document.createElement('div');
+    div.className = 'evento ' + clase;
+    div.innerHTML =
+      '<span>' + icono + '</span>' +
+      '<span class="tag">' + data.user_id + '</span>' +
+      '<span>' + data.pais.substring(0, 8) + '</span>' +
+      '<span style="color:#9ca3af">' + data.recurso + '</span>' +
+      (data.ip ? '<span class="ip-tag" style="margin-left:auto">' + data.ip + '</span>' : '');
+
+    feedPanel.insertBefore(div, feedPanel.firstChild);
+    if (feedPanel.children.length > 100) { feedPanel.removeChild(feedPanel.lastChild); }
+  };
+
+  ws.onerror = function() { window.location.href = '/'; };
+  ws.onclose = function() { document.querySelector('.dot').style.background = '#ef4444'; };
+
+  document.getElementById('btn-logout').addEventListener('click', function() {
+    ws.close();
+    localStorage.removeItem('token');
+    localStorage.removeItem('rol');
+    localStorage.removeItem('nombre');
+    window.location.href = '/';
+  });
+
+  function exportar() {
+    if (rol !== 'admin') { return; }
+    var csv = ['tipo,user_id,pais,score,detalle'];
+    alertasData.forEach(function(a) {
+      csv.push(a.tipo + ',' + a.user_id + ',' + a.pais + ',' + a.score + ',"' + a.detalle + '"');
+    });
+    var blob = new Blob([csv.join('\n')], {type: 'text/csv'});
+    var url  = URL.createObjectURL(blob);
+    var a    = document.createElement('a');
+    a.href = url;
+    a.download = 'alertas_export.csv';
+    a.click();
+  }
+</script>
+</body>
+</html>
