@@ -22,6 +22,10 @@ import bcrypt
 from jose import JWTError, jwt
 import uvicorn
 
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+
 app = FastAPI()
 
 
@@ -142,11 +146,129 @@ UMBRAL_VENTANA_SEG = 120
 DELAY_NORMAL       = 0.05
 DELAY_ALERTA       = 0.5
 
+# ─────────────────────────────────────────────
+# CONFIGURACIÓN DE EMAIL
+# ─────────────────────────────────────────────
+
+MAILTRAP_HOST     = "sandbox.smtp.mailtrap.io"
+MAILTRAP_PORT     = 2525
+MAILTRAP_USER     = "c375c8d2bf2d46"
+MAILTRAP_PASS     = "ed1a1c49337dc6"
+EMAIL_FROM        = "secureaccess@monitor.com"
+EMAIL_ADMIN       = "admin@secureaccess.com"
+
+# Set para no mandar el mismo tipo de alerta dos veces seguidas
+emails_enviados = set()
+
 estado_usuarios = {}
 total_eventos   = 0
 total_alertas   = 0
 alertas_log     = []
 
+def enviar_alerta_email(user_id, tipo_alerta, detalle, pais, score, timestamp):
+    """
+    Envía un email al admin cuando se detecta una alerta crítica.
+    Solo envía una vez por tipo de alerta por usuario para no saturar.
+    """
+    clave_email = f"{user_id}_{tipo_alerta}"
+    if clave_email in emails_enviados:
+        return
+    emails_enviados.add(clave_email)
+
+    # Construimos el email en formato HTML para que se vea profesional
+    asunto = f"🚨 ALERTA {tipo_alerta} — {user_id} — SecureAccess Monitor"
+
+    cuerpo_html = f"""
+    <html>
+    <body style="font-family: monospace; background: #0a0e1a; color: #e0e6f0; padding: 24px;">
+        <div style="max-width: 600px; margin: 0 auto;">
+
+            <div style="background: #111827; border: 1px solid #ef4444;
+                        border-radius: 8px; padding: 24px; margin-bottom: 16px;">
+                <h1 style="color: #f87171; font-size: 18px; margin: 0 0 8px;">
+                    🚨 ALERTA CRÍTICA DETECTADA
+                </h1>
+                <p style="color: #9ca3af; font-size: 12px; margin: 0;">
+                    SecureAccess Monitor — Sistema de Detección en Tiempo Real
+                </p>
+            </div>
+
+            <div style="background: #111827; border: 1px solid #1e3a5f;
+                        border-radius: 8px; padding: 24px; margin-bottom: 16px;">
+                <table style="width: 100%; border-collapse: collapse;">
+                    <tr>
+                        <td style="color: #6b7280; font-size: 12px; padding: 6px 0;
+                                   border-bottom: 1px solid #1e3a5f;">TIPO DE ALERTA</td>
+                        <td style="color: #f87171; font-weight: bold; font-size: 12px;
+                                   padding: 6px 0; border-bottom: 1px solid #1e3a5f;">
+                            {tipo_alerta.replace('_', ' ')}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="color: #6b7280; font-size: 12px; padding: 6px 0;
+                                   border-bottom: 1px solid #1e3a5f;">USUARIO</td>
+                        <td style="color: #60a5fa; font-size: 12px; padding: 6px 0;
+                                   border-bottom: 1px solid #1e3a5f;">{user_id}</td>
+                    </tr>
+                    <tr>
+                        <td style="color: #6b7280; font-size: 12px; padding: 6px 0;
+                                   border-bottom: 1px solid #1e3a5f;">PAÍS DE ORIGEN</td>
+                        <td style="color: #e0e6f0; font-size: 12px; padding: 6px 0;
+                                   border-bottom: 1px solid #1e3a5f;">{pais}</td>
+                    </tr>
+                    <tr>
+                        <td style="color: #6b7280; font-size: 12px; padding: 6px 0;
+                                   border-bottom: 1px solid #1e3a5f;">RISK SCORE</td>
+                        <td style="color: #fbbf24; font-weight: bold; font-size: 12px;
+                                   padding: 6px 0; border-bottom: 1px solid #1e3a5f;">
+                            {score} / 100
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="color: #6b7280; font-size: 12px; padding: 6px 0;
+                                   border-bottom: 1px solid #1e3a5f;">TIMESTAMP</td>
+                        <td style="color: #e0e6f0; font-size: 12px; padding: 6px 0;
+                                   border-bottom: 1px solid #1e3a5f;">{timestamp}</td>
+                    </tr>
+                    <tr>
+                        <td style="color: #6b7280; font-size: 12px; padding: 6px 0;">DETALLE</td>
+                        <td style="color: #e0e6f0; font-size: 12px; padding: 6px 0;">{detalle}</td>
+                    </tr>
+                </table>
+            </div>
+
+            <div style="background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3);
+                        border-radius: 8px; padding: 16px;">
+                <p style="color: #fca5a5; font-size: 12px; margin: 0;">
+                    ⚠ Este es un email automático generado por SecureAccess Monitor.
+                    Revisá el dashboard para más detalles e iniciá el protocolo
+                    de respuesta a incidentes si corresponde.
+                </p>
+            </div>
+
+        </div>
+    </body>
+    </html>
+    """
+
+    try:
+        msg = MIMEMultipart("alternative")
+        msg["Subject"] = asunto
+        msg["From"]    = EMAIL_FROM
+        msg["To"]      = EMAIL_ADMIN
+
+        parte_html = MIMEText(cuerpo_html, "html")
+        msg.attach(parte_html)
+
+        with smtplib.SMTP(MAILTRAP_HOST, MAILTRAP_PORT) as server:
+            server.starttls()
+            server.login(MAILTRAP_USER, MAILTRAP_PASS)
+            server.sendmail(EMAIL_FROM, EMAIL_ADMIN, msg.as_string())
+
+        print(f"  📧 Email enviado: {tipo_alerta} — {user_id}")
+
+    except Exception as e:
+        print(f"  ❌ Error enviando email: {e}")
 
 def inicializar_usuario(user_id):
     estado_usuarios[user_id] = {
@@ -340,6 +462,18 @@ async def websocket_endpoint(websocket: WebSocket, token: str = None):
 
             total_eventos += 1
             total_alertas += len(alertas)
+
+            # Enviar email para alertas de alto riesgo
+            for alerta in alertas:
+                if score >= 70:
+                    enviar_alerta_email(
+                        user_id     = user_id,
+                        tipo_alerta = alerta["tipo"],
+                        detalle     = alerta["detalle"],
+                        pais        = evento["country"],
+                        score       = score,
+                        timestamp   = str(evento["timestamp"])
+                    )
             tasa = f"{(total_alertas/total_eventos*100):.2f}"
 
             # Control de acceso en los datos:
