@@ -201,7 +201,8 @@ def enviar_alerta_email(user_id, tipo_alerta, detalle, pais, recurso, score, tim
     asunto     = f"{alerta['emoji']} [{alerta['severidad']}] {tipo_alerta} — {user_id} — SecureAccess Monitor"
     cuerpo_html = formatear_para_email(alerta)
 
-    try:
+    print(f"  📧 [{alerta['severidad']}] Alerta registrada: {tipo_alerta} — {user_id}")
+    '''try:
         msg = MIMEMultipart("alternative")
         msg["Subject"] = asunto
         msg["From"]    = EMAIL_FROM
@@ -217,7 +218,7 @@ def enviar_alerta_email(user_id, tipo_alerta, detalle, pais, recurso, score, tim
         print(f"  📧 [{alerta['severidad']}] Email enviado: {tipo_alerta} — {user_id}")
 
     except Exception as e:
-        print(f"  ❌ Error enviando email: {e}")
+        print(f"  ❌ Error enviando email: {e}")'''
 
 def inicializar_usuario(user_id):
     estado_usuarios[user_id] = {
