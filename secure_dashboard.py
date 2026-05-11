@@ -9,6 +9,8 @@ Roles:
 - analista → solo lectura, IPs enmascaradas
 """
 
+from analysis.alert_severity import construir_alerta_completa, formatear_para_email
+
 import asyncio
 import json
 import pandas as pd
@@ -26,6 +28,11 @@ import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
+from dotenv import load_dotenv
+import os
+
+load_dotenv()  # Carga las variables del archivo .env
+
 app = FastAPI()
 
 
@@ -35,9 +42,15 @@ app = FastAPI()
 
 # Clave secreta para firmar los tokens JWT
 # En producción esto iría en una variable de entorno, nunca en el código
-SECRET_KEY    = "secureaccess-monitor-clave-super-secreta-2024"
-ALGORITHM     = "HS256"
-TOKEN_EXPIRY  = 60  # minutos
+SECRET_KEY    = os.getenv("SECRET_KEY")
+ALGORITHM     = os.getenv("ALGORITHM", "HS256")
+TOKEN_EXPIRY  = int(os.getenv("TOKEN_EXPIRY", 60))
+MAILTRAP_HOST = os.getenv("MAILTRAP_HOST")
+MAILTRAP_PORT = int(os.getenv("MAILTRAP_PORT", 2525))
+MAILTRAP_USER = os.getenv("MAILTRAP_USER")
+MAILTRAP_PASS = os.getenv("MAILTRAP_PASS")
+EMAIL_FROM    = os.getenv("EMAIL_FROM")
+EMAIL_ADMIN   = os.getenv("EMAIL_ADMIN")
 
 # Contexto de hashing — usamos bcrypt, el estándar de la industria
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
@@ -165,91 +178,28 @@ total_eventos   = 0
 total_alertas   = 0
 alertas_log     = []
 
-def enviar_alerta_email(user_id, tipo_alerta, detalle, pais, score, timestamp):
+def enviar_alerta_email(user_id, tipo_alerta, detalle, pais, recurso, score, timestamp):
     """
-    Envía un email al admin cuando se detecta una alerta crítica.
-    Solo envía una vez por tipo de alerta por usuario para no saturar.
+    Envía un email al admin con severidad y recomendaciones incluidas.
     """
     clave_email = f"{user_id}_{tipo_alerta}"
     if clave_email in emails_enviados:
         return
     emails_enviados.add(clave_email)
 
-    # Construimos el email en formato HTML para que se vea profesional
-    asunto = f"🚨 ALERTA {tipo_alerta} — {user_id} — SecureAccess Monitor"
+    # Construimos la alerta completa con severidad y recomendaciones
+    alerta = construir_alerta_completa(
+        tipo_alerta = tipo_alerta,
+        user_id     = user_id,
+        pais        = pais,
+        recurso     = recurso,
+        score       = score,
+        timestamp   = timestamp,
+        detalle     = detalle
+    )
 
-    cuerpo_html = f"""
-    <html>
-    <body style="font-family: monospace; background: #0a0e1a; color: #e0e6f0; padding: 24px;">
-        <div style="max-width: 600px; margin: 0 auto;">
-
-            <div style="background: #111827; border: 1px solid #ef4444;
-                        border-radius: 8px; padding: 24px; margin-bottom: 16px;">
-                <h1 style="color: #f87171; font-size: 18px; margin: 0 0 8px;">
-                    🚨 ALERTA CRÍTICA DETECTADA
-                </h1>
-                <p style="color: #9ca3af; font-size: 12px; margin: 0;">
-                    SecureAccess Monitor — Sistema de Detección en Tiempo Real
-                </p>
-            </div>
-
-            <div style="background: #111827; border: 1px solid #1e3a5f;
-                        border-radius: 8px; padding: 24px; margin-bottom: 16px;">
-                <table style="width: 100%; border-collapse: collapse;">
-                    <tr>
-                        <td style="color: #6b7280; font-size: 12px; padding: 6px 0;
-                                   border-bottom: 1px solid #1e3a5f;">TIPO DE ALERTA</td>
-                        <td style="color: #f87171; font-weight: bold; font-size: 12px;
-                                   padding: 6px 0; border-bottom: 1px solid #1e3a5f;">
-                            {tipo_alerta.replace('_', ' ')}
-                        </td>
-                    </tr>
-                    <tr>
-                        <td style="color: #6b7280; font-size: 12px; padding: 6px 0;
-                                   border-bottom: 1px solid #1e3a5f;">USUARIO</td>
-                        <td style="color: #60a5fa; font-size: 12px; padding: 6px 0;
-                                   border-bottom: 1px solid #1e3a5f;">{user_id}</td>
-                    </tr>
-                    <tr>
-                        <td style="color: #6b7280; font-size: 12px; padding: 6px 0;
-                                   border-bottom: 1px solid #1e3a5f;">PAÍS DE ORIGEN</td>
-                        <td style="color: #e0e6f0; font-size: 12px; padding: 6px 0;
-                                   border-bottom: 1px solid #1e3a5f;">{pais}</td>
-                    </tr>
-                    <tr>
-                        <td style="color: #6b7280; font-size: 12px; padding: 6px 0;
-                                   border-bottom: 1px solid #1e3a5f;">RISK SCORE</td>
-                        <td style="color: #fbbf24; font-weight: bold; font-size: 12px;
-                                   padding: 6px 0; border-bottom: 1px solid #1e3a5f;">
-                            {score} / 100
-                        </td>
-                    </tr>
-                    <tr>
-                        <td style="color: #6b7280; font-size: 12px; padding: 6px 0;
-                                   border-bottom: 1px solid #1e3a5f;">TIMESTAMP</td>
-                        <td style="color: #e0e6f0; font-size: 12px; padding: 6px 0;
-                                   border-bottom: 1px solid #1e3a5f;">{timestamp}</td>
-                    </tr>
-                    <tr>
-                        <td style="color: #6b7280; font-size: 12px; padding: 6px 0;">DETALLE</td>
-                        <td style="color: #e0e6f0; font-size: 12px; padding: 6px 0;">{detalle}</td>
-                    </tr>
-                </table>
-            </div>
-
-            <div style="background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3);
-                        border-radius: 8px; padding: 16px;">
-                <p style="color: #fca5a5; font-size: 12px; margin: 0;">
-                    ⚠ Este es un email automático generado por SecureAccess Monitor.
-                    Revisá el dashboard para más detalles e iniciá el protocolo
-                    de respuesta a incidentes si corresponde.
-                </p>
-            </div>
-
-        </div>
-    </body>
-    </html>
-    """
+    asunto     = f"{alerta['emoji']} [{alerta['severidad']}] {tipo_alerta} — {user_id} — SecureAccess Monitor"
+    cuerpo_html = formatear_para_email(alerta)
 
     try:
         msg = MIMEMultipart("alternative")
@@ -257,15 +207,14 @@ def enviar_alerta_email(user_id, tipo_alerta, detalle, pais, score, timestamp):
         msg["From"]    = EMAIL_FROM
         msg["To"]      = EMAIL_ADMIN
 
-        parte_html = MIMEText(cuerpo_html, "html")
-        msg.attach(parte_html)
+        msg.attach(MIMEText(cuerpo_html, "html"))
 
         with smtplib.SMTP(MAILTRAP_HOST, MAILTRAP_PORT) as server:
             server.starttls()
             server.login(MAILTRAP_USER, MAILTRAP_PASS)
             server.sendmail(EMAIL_FROM, EMAIL_ADMIN, msg.as_string())
 
-        print(f"  📧 Email enviado: {tipo_alerta} — {user_id}")
+        print(f"  📧 [{alerta['severidad']}] Email enviado: {tipo_alerta} — {user_id}")
 
     except Exception as e:
         print(f"  ❌ Error enviando email: {e}")
@@ -462,43 +411,74 @@ async def websocket_endpoint(websocket: WebSocket, token: str = None):
 
             total_eventos += 1
             total_alertas += len(alertas)
-
-            # Enviar email para alertas de alto riesgo
+            tasa = f"{(total_alertas/total_eventos*100):.2f}" if total_eventos > 0 else "0.00"
+            
+            # Enriquecer alertas con severidad y recomendaciones
+            alertas_enriquecidas = []
             for alerta in alertas:
+                try:
+                    alerta_completa = construir_alerta_completa(
+                        tipo_alerta = alerta["tipo"],
+                        user_id     = user_id,
+                        pais        = evento["country"],
+                        recurso     = evento["resource"],
+                        score       = score,
+                        timestamp   = evento["timestamp"],
+                        detalle     = alerta["detalle"]
+                    )
+                    alertas_enriquecidas.append(alerta_completa)
+            
+                    if score >= 70:
+                        enviar_alerta_email(
+                            user_id     = user_id,
+                            tipo_alerta = alerta["tipo"],
+                            detalle     = alerta["detalle"],
+                            pais        = evento["country"],
+                            recurso     = evento["resource"],
+                            score       = score,
+                            timestamp   = str(evento["timestamp"])
+                        )
+                except Exception as e:
+                    print(f"  ❌ Error procesando alerta: {e}")
+                    alertas_enriquecidas.append(alerta)
+                        
+                # Enviar email para alertas de alto riesgo
                 if score >= 70:
                     enviar_alerta_email(
                         user_id     = user_id,
                         tipo_alerta = alerta["tipo"],
                         detalle     = alerta["detalle"],
                         pais        = evento["country"],
+                        recurso     = evento["resource"],
                         score       = score,
                         timestamp   = str(evento["timestamp"])
                     )
-            tasa = f"{(total_alertas/total_eventos*100):.2f}"
-
-            # Control de acceso en los datos:
-            # Admin → IP completa
-            # Analista → IP enmascarada
+            
             ip_mostrar = None
-            if alertas:
+            if alertas_enriquecidas:
                 ip_mostrar = (evento["ip_address"] if rol == "admin"
                              else enmascarar_ip(evento["ip_address"]))
-
+            
             await websocket.send_json({
-                "total_eventos": total_eventos,
-                "total_alertas": total_alertas,
-                "tasa"         : tasa,
-                "user_id"      : user_id,
-                "pais"         : evento["country"],
-                "recurso"      : evento["resource"],
-                "status"       : evento["status"],
-                "timestamp"    : str(evento["timestamp"]),
-                "score"        : score,
-                "ip"           : ip_mostrar,
-                "alertas"      : alertas
+                "total_eventos" : total_eventos,
+                "total_alertas" : total_alertas,
+                "tasa"          : tasa,
+                "user_id"       : user_id,
+                "pais"          : evento["country"],
+                "recurso"       : evento["resource"],
+                "status"        : evento["status"],
+                "timestamp"     : str(evento["timestamp"]),
+                "score"         : score,
+                "ip"            : ip_mostrar,
+                "alertas"       : alertas_enriquecidas
             })
-
-            await asyncio.sleep(DELAY_ALERTA if alertas else DELAY_NORMAL)
+            
+            if alertas_enriquecidas:
+                await asyncio.sleep(0.6)   # Alertas → más lento para que se vean
+            elif score > 0:
+                await asyncio.sleep(0.15)  # Sospechoso → velocidad media
+            else:
+                await asyncio.sleep(0.08)  # Normal → rápido pero procesable
 
     except WebSocketDisconnect:
         pass

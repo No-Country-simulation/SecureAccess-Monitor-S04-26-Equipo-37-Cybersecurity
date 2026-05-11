@@ -202,11 +202,12 @@
         var div = document.createElement('div');
         div.className = 'alerta ' + alerta.tipo;
         div.innerHTML =
-          '<div class="tipo">⚡ ' + alerta.tipo.replace(/_/g, ' ') + '</div>' +
+          '<div class="tipo">' + (alerta.emoji || '⚡') + ' ' + alerta.severidad + ' — ' + alerta.tipo_alerta.replace(/_/g, ' ') + '</div>' +
           '<div class="info"><strong>' + data.user_id + '</strong> · ' + data.pais + ' · ' + data.timestamp.substring(5, 16) + '</div>' +
           '<div class="info">' + alerta.detalle + '</div>' +
           '<div class="info">Risk score: <strong>' + data.score + '</strong>' +
-          (data.ip ? ' <span class="ip-tag">IP: ' + data.ip + '</span>' : '') + '</div>';
+          (data.ip ? ' <span class="ip-tag">IP: ' + data.ip + '</span>' : '') + '</div>' +
+          '<div class="info" style="color:#9ca3af; font-size:10px; margin-top:4px;">⏱ ' + alerta.tiempo_respuesta + '</div>';
 
         panel.insertBefore(div, panel.firstChild);
         if (panel.children.length > 50) { panel.removeChild(panel.lastChild); }
